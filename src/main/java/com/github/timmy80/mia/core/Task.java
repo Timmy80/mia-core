@@ -89,10 +89,7 @@ public abstract class Task extends Thread implements Executor {
 	 * @param topicFilter
 	 * @throws InvalidTopicException if the topic start with "/task/".
 	 */
-	public <T> void subscribe(String topicFilter, Subscriber<T> subscriber) {
-		if(topicFilter.startsWith("task/"))
-			throw new InvalidTopicException(String.format("topic starting with 'task' are reserved for system usage", topicFilter));
-		
+	public <T> void subscribe(String topicFilter, Subscriber<T> subscriber) {	
 		appCtx.messaging().register(topicFilter, this, subscriber);
 	}
 	
@@ -102,9 +99,6 @@ public abstract class Task extends Thread implements Executor {
 	 * @throws InvalidTopicException if the topic start with "/task/".
 	 */
 	public <T> void unsubscribe(String topicFilter, Subscriber<T> subscriber) {
-		if(topicFilter.startsWith("task/"))
-			throw new InvalidTopicException(String.format("topic starting with 'task' are reserved for system usage", topicFilter));
-		
 		appCtx.messaging().unregister(topicFilter, this, subscriber);
 	}
 

@@ -1,13 +1,12 @@
 package com.github.timmy80.mia.core;
 
-@SuppressWarnings("rawtypes")
-public class Subscription {
+public class Subscription<Q> {
 	
 	private final TopicFilter topicFilter;
 	private final Task handlingTask;
-	private final Subscriber subscriber;
+	private final Subscriber<Q> subscriber;
 	
-	public Subscription(String topicFilter, Task handlingTask, Subscriber subscriber) throws InvalidTopicFilterException {
+	public Subscription(String topicFilter, Task handlingTask, Subscriber<Q> subscriber) throws InvalidTopicFilterException {
 		this.topicFilter = new TopicFilter(topicFilter);
 		this.handlingTask = handlingTask;
 		this.subscriber = subscriber;
@@ -21,7 +20,7 @@ public class Subscription {
 		return handlingTask;
 	}
 
-	public Subscriber getSubscriber() {
+	public Subscriber<Q> getSubscriber() {
 		return subscriber;
 	}
 
