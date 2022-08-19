@@ -8,6 +8,11 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.github.timmy80.mia.messaging.InvalidTopicException;
+import com.github.timmy80.mia.messaging.MessageCtx;
+import com.github.timmy80.mia.messaging.ResponseHandler;
+import com.github.timmy80.mia.messaging.Subscriber;
+
 public class MessagingTest {
 	
 	public static class TheTask extends Task {

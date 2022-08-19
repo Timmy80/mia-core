@@ -1,8 +1,12 @@
-package com.github.timmy80.mia.core;
+package com.github.timmy80.mia.messaging;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.function.BiFunction;
+
+import com.github.timmy80.mia.core.Async;
+import com.github.timmy80.mia.core.Task;
+import com.github.timmy80.mia.core.TimeLimit;
 
 public class MessageCtx<R extends Object> {
 	public static enum Type {

@@ -1,4 +1,4 @@
-package com.github.timmy80.mia.core;
+package com.github.timmy80.mia.messaging;
 
 public class InvalidPublishException extends Exception {
 

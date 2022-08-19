@@ -1,11 +1,14 @@
-package com.github.timmy80.mia.core;
+package com.github.timmy80.mia.messaging;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import com.github.timmy80.mia.core.MessageCtx.Type;
+import com.github.timmy80.mia.core.Async;
+import com.github.timmy80.mia.core.Task;
+import com.github.timmy80.mia.core.TimeLimit;
+import com.github.timmy80.mia.messaging.MessageCtx.Type;
 
 import io.prometheus.client.Counter;
 import io.prometheus.client.Counter.Child;

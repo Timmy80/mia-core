@@ -4,6 +4,9 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
+import com.github.timmy80.mia.messaging.InvalidTopicFilterException;
+import com.github.timmy80.mia.messaging.TopicFilter;
+
 public class TopicFilterTest {
 	
 	@Test(expected = InvalidTopicFilterException.class)
