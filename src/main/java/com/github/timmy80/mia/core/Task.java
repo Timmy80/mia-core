@@ -52,6 +52,11 @@ public abstract class Task extends Thread implements Executor {
 	ArrayList<Terminal<?>> terminals = new ArrayList<>();
 
 	EventControlBlock ecb = new EventControlBlock();
+	
+	/**
+	 * Last time a full iteration has been performed (Timestamp in milliseconds)
+	 */
+	volatile long lastScanTime = 0;
 
 	/**
 	 * Constructor to associate this task to an {@link ApplicationContext}
@@ -153,6 +158,9 @@ public abstract class Task extends Thread implements Executor {
 				} catch (InterruptedException e) {
 					logger.error("Task interrupted", e);
 				}
+				
+				// last time a full iteration has been performed
+				lastScanTime = System.currentTimeMillis();
 			}
 			
 			if(terminals.size() > 0) {
@@ -204,14 +212,32 @@ public abstract class Task extends Thread implements Executor {
 	 * You can safely override this method to handle the event.<br>
 	 * In order to prevent an immediate stop, you may add one or more epilogs to this Task by calling {@link #registerEpilog(CompletableFuture)}
 	 */
-	protected void eventStopRequested() {
-	}
+	protected void eventStopRequested() {}
 	
-//	@SuppressWarnings("rawtypes")
-//	public void eventEndOfTerminal(Terminal term) {};
+	/**
+	 * Get the {@link ApplicationContext} of this Task;
+	 * @return the ApplicationContext.
+	 */
+	public ApplicationContext getAppCtx() {
+		return this.appCtx;
+	}
 
+	/**
+	 * Get the Netty {@linkplain EventLoopGroup} used for networking within this {@link Task}.<br>
+	 * The {@link EventLoopGroup} is provided by the {@linkplain ApplicationContext}.
+	 * @return
+	 */
 	public EventLoopGroup getEventloopgroup() {
 		return this.appCtx.getEventloopgroup();
+	}
+	
+	/**
+	 * Get the {@linkplain Task#lastScanTime} for this {@link Task}.<br>
+	 * See javadoc of {@linkplain Task#lastScanTime} for details.
+	 * @return
+	 */
+	public long getLastScanTime() {
+		return lastScanTime;
 	}
 	
 	@Override

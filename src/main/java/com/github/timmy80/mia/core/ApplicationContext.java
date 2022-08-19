@@ -1,6 +1,11 @@
 package com.github.timmy80.mia.core;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -31,7 +36,14 @@ public class ApplicationContext {
 		return defaultAppCtx;
 	}
 	
+	private final ApplicationContextParams params;
+	
+	/**
+	 * List of Tasks registered to this ApplicationContext.
+	 */
 	private final HashMap<String, Task> tasks = new HashMap<>();
+	
+	private AtomicBoolean stopPending = new AtomicBoolean(false); 
 	
 	/**
 	 * The netty EventLoopGroup for this context.
@@ -44,6 +56,7 @@ public class ApplicationContext {
 	 */
 	protected ApplicationContext(ApplicationContextParams params) {
 		eventLoopGroup = (params.getNetThreads() == null)?new NioEventLoopGroup():new NioEventLoopGroup(params.getNetThreads());
+		this.params = (ApplicationContextParams) params.clone();
 	}
 	
 	/**
@@ -87,10 +100,68 @@ public class ApplicationContext {
 	}
 	
 	/**
+	 * Get the host IP listened to for probes.
+	 * @return
+	 */
+	public String getProbeInetHost() {
+		return params.getProbeInetHost();
+	}
+
+	/**
+	 * Get the port listened to for probes
+	 * @return
+	 */
+	public int getProbeInetPort() {
+		return params.getProbeInetPort();
+	}
+	
+	/**
+	 * Get the probe handlers.
+	 * @return
+	 */
+	protected HashMap<String, Class<ProbeHandlerTerm>> getProbes() {
+		return params.getProbes();
+	}
+	
+	public boolean isStopPending() {
+		return stopPending.get();
+	}
+
+	/**
+	 * Provide a read only set on {@link Task} registered to this {@link ApplicationContext}
+	 * @return A read only set of {@link Task}. Never null.
+	 */
+	public Set<Task> taskSet(){
+		HashSet<Task> taskset = new HashSet<>();
+		taskset.addAll(tasks.values());
+		return Collections.unmodifiableSet(taskSet());
+	}
+	
+	/**
+	 * Check if all the tasks registered to this {@link ApplicationContext} have performed a full scan since at least timeMilliseconds.
+	 * @param timeMilliseconds The time in milliseconds that a {@link Task} must not exceed for a fullScan.
+	 * @return True if all the tasks are OK. False otherwise.
+	 */
+	public boolean watchdogCheck(long timeMilliseconds) {
+		// iterate on all tasks
+		Iterator<Task> it = tasks.values().iterator();
+		while(it.hasNext()) {
+			Task task = it.next();
+			// if a task has not perform a full scan since now-timeMilliseconds
+			if(task.getLastScanTime() < (System.currentTimeMillis() - timeMilliseconds)) {
+				return false;
+			}
+		}
+		
+		return true;
+	}
+	
+	/**
 	 * Call {@link Task#stopTask()} on all the tasks registered to this ApplicationContext
 	 */
 	public void stop() {
 		synchronized (tasks) {
+			stopPending.set(true);
 			for(Task task : tasks.values())
 				task.stopTask();
 		}
