@@ -1,28 +1,31 @@
-package com.github.timmy80.mia.core;
+package com.github.timmy80.mia.messaging;
 
 import static org.junit.Assert.*;
 
 import java.util.concurrent.ExecutionException;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.github.timmy80.mia.messaging.InvalidTopicException;
-import com.github.timmy80.mia.messaging.MessageCtx;
-import com.github.timmy80.mia.messaging.ResponseHandler;
-import com.github.timmy80.mia.messaging.Subscriber;
+import com.github.timmy80.mia.core.TimeLimit;
+import com.github.timmy80.mia.core.LogFmt;
 
 public class MessagingTest {
 	
-	public static class TheTask extends Task {
+	public static class MessagingTestTask extends MessagingTask<String, String> {
+		
+		private static Logger logger = LogManager.getLogger(MessagingTestTask.class);
 
-		public TheTask(String name) throws IllegalArgumentException {
-			super(name);
+		public MessagingTestTask(String name, Messaging<String, String> messaging) throws IllegalArgumentException {
+			super(name, messaging);
 		}
 
 		@Override
 		public void eventStartTask() {
+			logger.info("{}", new LogFmt().append("task", getName()).append("event", "hello world"));
 			System.out.println("Hello world");
 		}
 	}
@@ -46,14 +49,15 @@ public class MessagingTest {
 		}
 	}
 	
-	static TheTask theTask;
-	static TheTask theSecondTask;
+	static MessagingTestTask theTask;
+	static MessagingTestTask theSecondTask;
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		theTask = new TheTask("the-task");
+		Messaging<String, String> messaging = new Messaging<>();
+		theTask = new MessagingTestTask("the-task", messaging);
 		theTask.start();
-		theSecondTask = new TheTask("the-second-task");
+		theSecondTask = new MessagingTestTask("the-second-task", messaging);
 		theSecondTask.start();
 		
 
@@ -111,52 +115,6 @@ public class MessagingTest {
 	@Test
 	public void testPush() throws InterruptedException, ExecutionException {
 		theTask.publish("test/nominal/string", "foo", TimeLimit.in(5000)).join();
-	}
-	
-	@Test(expected = ClassCastException.class)
-	public void testPublishSubscriberCastException() throws Throwable {
-		try {
-			theTask.publish("test/nominal/string", 842L, TimeLimit.in(5000), new ResponseHandler<Long>() {
-				
-				@Override
-				public void eventResponseReceived(MessageCtx<Long> message, Long payload) {
-					System.out.println("Response received");
-					System.out.println(payload);
-				}
-			}).join();
-		} catch (ExecutionException e) {
-			e.getCause().printStackTrace();
-			throw e.getCause();
-		}
-	}
-
-//	@Test(expected = ClassCastException.class)
-//	public void testPublishResponseHandlerCastException() throws Throwable {
-//		System.out.println(theTask.publish("test/nominal/string", "842", TimeLimit.in(5000), new ResponseHandler<Long>() {
-//			
-//			@Override
-//			public void eventResponseReceived(MessageCtx<Long> message, Long payload) {
-//				System.out.println("Response received");
-//				System.out.println(payload);
-//			}
-//		}).get());
-//	}
-	
-	@Test(expected = ClassCastException.class)
-	public void testPublishResponseHandlerCastException() throws Throwable {
-		try {	
-			theTask.publish("test/nominal/string", "842", TimeLimit.in(5000), new ResponseHandler<Long>() {
-				
-				@Override
-				public void eventResponseReceived(MessageCtx<Long> message, Long payload) {
-					System.out.println("Response received");
-					System.out.println(payload);
-				}
-			}).join();
-		} catch (ExecutionException e) {
-			e.getCause().printStackTrace();
-			throw e.getCause();
-		}
 	}
 	
 	@Test

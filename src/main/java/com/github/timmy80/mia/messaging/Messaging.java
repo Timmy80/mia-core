@@ -27,6 +27,11 @@ public class Messaging<Q, R> {
 	private static final Counter topicCallCount = Counter.build("topic_call_count", "Counter on topic call").labelNames("task", "topic").register();
 	private static final Counter messageCount = Counter.build("messages_total", "Total messages sent").labelNames("task", "type").register();
 	
+	/**
+	 * Topic subscriptions map<topic, subscribers>.<br>
+	 * This map is copied on write so write access is synchronized.<br>
+	 * Concurrent read access does not require a lock but it means that subscriptions may not be up to date.
+	 */
 	private volatile HashMap<String, List<Subscription<Q>>> subsriptions = new HashMap<>(); // Copy on write pointer (synchronize only on write)
 	
 	/**

@@ -5,8 +5,6 @@ import java.util.HashMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.github.timmy80.mia.messaging.Messaging;
-
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 
@@ -34,7 +32,6 @@ public class ApplicationContext {
 	}
 	
 	private final HashMap<String, Task> tasks = new HashMap<>();
-	private final Messaging messaging = new Messaging();
 	
 	/**
 	 * The netty EventLoopGroup for this context.
@@ -79,14 +76,6 @@ public class ApplicationContext {
 		synchronized (tasks) {
 			tasks.remove(task.getName());
 		}
-	}
-	
-	/**
-	 * Get the messaging context for this Application
-	 * @return
-	 */
-	protected Messaging messaging() {
-		return messaging;
 	}
 	
 	/**

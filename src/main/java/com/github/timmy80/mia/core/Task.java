@@ -19,10 +19,6 @@ import com.github.timmy80.mia.core.Async.VoidFunction1;
 import com.github.timmy80.mia.core.Async.VoidFunction2;
 import com.github.timmy80.mia.core.Async.VoidFunction3;
 import com.github.timmy80.mia.core.Async.VoidFunction4;
-import com.github.timmy80.mia.messaging.InvalidTopicException;
-import com.github.timmy80.mia.messaging.MessageCtx;
-import com.github.timmy80.mia.messaging.ResponseHandler;
-import com.github.timmy80.mia.messaging.Subscriber;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
@@ -50,8 +46,6 @@ public abstract class Task extends Thread implements Executor {
 	private boolean run = true;
 	
 	private boolean stopEventTriggered = false;
-	
-	//private static final Summary topicCallLatency = Summary.build().name("topic_call_latency_seconds").help("Topic call latency in seconds.").labelNames("task", "topic").register();
 	
 	ConcurrentLinkedQueue<Runnable> jobs = new ConcurrentLinkedQueue<>();
 	ConcurrentLinkedQueue<CompletableFuture<?>> epilogs = new ConcurrentLinkedQueue<>();
@@ -86,44 +80,6 @@ public abstract class Task extends Thread implements Executor {
 	 */
 	public void wakeup() {
 		ecb.post();
-	}
-
-	/**
-	 * Subscribe to a topicFilter
-	 * @param topicFilter
-	 * @throws InvalidTopicException if the topic start with "/task/".
-	 */
-	public <T> void subscribe(String topicFilter, Subscriber<T> subscriber) {	
-		appCtx.messaging().register(topicFilter, this, subscriber);
-	}
-	
-	/**
-	 * Subscribe to a topicFilter
-	 * @param topicFilter
-	 * @throws InvalidTopicException if the topic start with "/task/".
-	 */
-	public <T> void unsubscribe(String topicFilter, Subscriber<T> subscriber) {
-		appCtx.messaging().unregister(topicFilter, this, subscriber);
-	}
-
-	/**
-	 * Publish a message using it's topic.<br>
-	 * If the topic is of the form "/task/taskName" the message will be published to the task "taskName".<br>
-	 * Else the topic will be looked for into the topic list.<br>
-	 * <br>
-	 * When multiple subscribers are subscribed to a topic then the messages are load-balanced between the subscribers using the round-robin algorithm.
-	 * @param message
-	 * @param responseHandler the object called on response
-	 * @return 
-	 * @throws InvalidTopicException if the topic does not match any subscriber
-	 * @throws NullPointerException if responseHandler is null
-	 */
-	public <R, T> MessageCtx<R> publish(String topic, T payload, TimeLimit limit, ResponseHandler<R> responseHandler) {
-		return appCtx.messaging().publish(topic, payload, limit, responseHandler, this);
-	}
-	
-	public <R, T> MessageCtx<Void> publish(String topic, T payload, TimeLimit limit) {
-		return appCtx.messaging().publish(topic, payload, limit, this);
 	}
 	
 	protected void registerTerminal(Terminal<?> terminal) {
