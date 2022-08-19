@@ -12,7 +12,16 @@ import io.netty.util.Timer;
 /**
  * Utility class to manage calls to {@link FunctionalInterface} by an {@link Executor} with support for timeouts(See: {@linkplain TimeLimit}).<br>
  * This class offers FunctionalInterfaces for Void and NonVoid functions up to 4 arguments.<br>
+ * <br>
+ * You have access to a variety of methods named with the following principles:<br>
+ * <ul>
+ * <li>starts with <strong>run</strong> for void returning methods and <strong>call</strong> for non void methods.</li>
+ * <li>ends with <strong>Before</strong> when the execution is time constrained and <strong>Later</strong> otherwise.</li>
+ * </ul>
  * 
+ * When the execution time is constrained in case of a timeout the CompletableFuture will be completed exceptionally by a 
+ * {@link TimeLimitExceededException}<br>
+ * <br>
  * Examples:
  * <pre>{@code
  * Async.callLater(executor, testObject::methodWithTwoArg, "foo", "bar").get();
@@ -28,6 +37,11 @@ public class Async {
 	 * Timer for time constrained executions
 	 */
 	protected static final Timer timer = new HashedWheelTimer(10, TimeUnit.MILLISECONDS);
+	
+	//#region
+	//***************************************************************************
+	// Functional Interfaces
+	//***************************************************************************
 	
 	/**
 	 * A {@link Runnable} that supports {@link Exception}
@@ -78,25 +92,18 @@ public class Async {
 	public static interface Function4<R, T0, T1, T2, T3> {
 		public R apply(T0 arg0, T1 arg1, T2 arg2, T3 arg3) throws Exception;
 	}
-
-//	private static final Logger logger = LogManager.getLogger(Async.class.getName());
+	
+	//#endregion
+	
+	//#region
+	//***************************************************************************
+	// Static Methods for using Functional Interfaces. 
+	// ex: Async.runLater(Executors.newSingleThreadExecutor(), obj::method, arg1, arg2)
+	//***************************************************************************
 	
 	public static CompletableFuture<Void> execute(Executor executor, Runnable runnable){
 		return runLater(executor, ()-> runnable.run());
 	}
-	
-//	public static CompletableFuture<Void> runLater(Executor executor, ThrowingRunnable runnable){
-//		CompletableFuture<Void> future = new CompletableFuture<Void>();
-//		executor.execute(() -> {
-//			try {
-//				runnable.run();
-//				future.complete(null);
-//			} catch(Exception e) {
-//				future.completeExceptionally(e);
-//			}
-//		});
-//		return future;
-//	}
 	
 	public static CompletableFuture<Void> runLater(Executor executor, ThrowingRunnable runnable){
 		return runBefore(executor, TimeLimit.noLimit(), runnable);
@@ -117,18 +124,6 @@ public class Async {
 	public static <T0, T1, T2, T3> CompletableFuture<Void> runLater(Executor executor, VoidFunction4<T0, T1, T2, T3> function, T0 arg0, T1 arg1, T2 arg2, T3 arg3){
 		return runLater(executor, () -> function.apply(arg0, arg1, arg2, arg3));
 	}
-	
-//	public static <R> CompletableFuture<R> callLater(Executor executor, Callable<R> callable){
-//		CompletableFuture<R> future = new CompletableFuture<R>();
-//		executor.execute(() -> {
-//			try {
-//				future.complete(callable.call());
-//			} catch(Exception e) {
-//				future.completeExceptionally(e);
-//			}
-//		});
-//		return future;
-//	}
 	
 	public static <R> CompletableFuture<R> callLater(Executor executor, Callable<R> callable){
 		return callBefore(executor, TimeLimit.noLimit(), callable);
@@ -153,43 +148,6 @@ public class Async {
 	public static CompletableFuture<Void> executeBefore(Executor executor, TimeLimit limit, Runnable runnable){
 		return runBefore(executor, limit, ()-> runnable.run());
 	}
-	
-//	public static CompletableFuture<Void> runBefore(Executor executor, TimeLimit limit, ThrowingRunnable runnable){
-//		CompletableFuture<Void> future = new CompletableFuture<Void>();
-//		executor.execute(limit, () -> {
-//			Timeout t = null;
-//			try {
-//				if(limit.isExpired())
-//					throw new TimeLimitExceededException(false, false);
-//				
-//				final Thread thread = Thread.currentThread();
-//				if(!limit.isNoLimit()) {
-//					t = timer.newTimeout((Timeout timeout) ->{
-//						thread.interrupt(); // interrupt the thread in case of timeout to interrupt any blocking task
-//					}, limit.getNotAfter(), TimeUnit.MILLISECONDS);
-//				}
-//				
-//				runnable.run();
-//				t.cancel(); // cancel timer ASAP to avoid false positive timeout.
-//				
-//				if(limit.isExpired())
-//					throw new TimeLimitExceededException(true, false);
-//				
-//				future.complete(null);
-//			}
-//			catch(InterruptedException e) {
-//				future.completeExceptionally(new TimeLimitExceededException(false, true));
-//			}
-//			catch(Exception e) {
-//				future.completeExceptionally(e);
-//			}
-//			finally {
-//				if(t != null)
-//					t.cancel();
-//			}
-//		});
-//		return future;
-//	}
 	
 	public static CompletableFuture<Void> runBefore(Executor executor, TimeLimit limit, ThrowingRunnable runnable){
 		return callBefore(executor, limit, ()->{ runnable.run(); return null; });
@@ -258,6 +216,14 @@ public class Async {
 		return callBefore(executor, limit, () -> function.apply(arg0, arg1, arg2, arg3));
 	}
 	
+	//#endregion
+	
+	//#region
+	//***************************************************************************
+	// Static Methods for Tiemout management. 
+	// ex: Async.newTimeout(100, TimeUnit.MILLISECONDS, obj::onTimeoutEvent)
+	//***************************************************************************
+	
 	/**
 	 * Create a new Timeout. If the delay is reached, the timerTask is called on the thread of the timer.<br>
 	 * If you need your timeout to be handled on a specific thread use {@linkplain Async#newTimeout(Executor, long, TimeUnit, TimerTask)}
@@ -305,6 +271,8 @@ public class Async {
 			runLater(executor, timerTask::run, t);
 		});
 	}
+	
+	//#endregion
 	
 	/**
 	 * Avoid any instance of this class to be made
