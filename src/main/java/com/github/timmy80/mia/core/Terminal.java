@@ -33,7 +33,7 @@ import io.netty.util.concurrent.Future;
  *
  * @param <T>
  */
-public class Terminal<T extends Task> implements Executor {
+public class Terminal<T extends Task> implements ExecutionStage {
 
 	private static Logger logger = LogManager.getLogger(Terminal.class.getName());
 	
@@ -88,7 +88,7 @@ public class Terminal<T extends Task> implements Executor {
 	
 	/**
 	 * End the life of this terminal.<br>
-	 * An call on {@link State#eventLeaveState()} will be done on the active {@link State} and then {@link Terminal#eventTermination()} will be called.
+	 * A call on {@link State#eventLeaveState()} will be done on the active {@link State} and then {@link Terminal#eventTermination()} will be called.
 	 */
 	public void terminate() {
 		nextState(null);
@@ -96,6 +96,11 @@ public class Terminal<T extends Task> implements Executor {
 	
 	public boolean isTerminated() {
 		return this.state == null;
+	}
+
+	@Override
+	public boolean isActive() {
+		return !isTerminated();
 	}
 	
 	/**
@@ -162,16 +167,8 @@ public class Terminal<T extends Task> implements Executor {
 	
 	//#region
 	//***************************************************************************
-	// Short calls to Async static methods on this Executor.
+	// Short calls to Async static methods on this ExecutionStage.
 	//***************************************************************************
-	
-	/**
-	 * Execute the given command at some time in the future using the Thread of this Task.<br>
-	 * Implementation of {@link Executor}
-	 */
-	public void execute(Runnable e) {
-		task().execute(e);
-	}
 	
 	/**
 	 * Implementation of {@linkplain Async#callBefore(Executor, TimeLimit, Callable)} with a check to ensure the Terminal is not terminated.<br>
@@ -184,7 +181,7 @@ public class Terminal<T extends Task> implements Executor {
 	 */
 	public <R> CompletableFuture<R> callBefore(TimeLimit limit, Callable<R> callable){
 		
-		return Async.callBefore(this, limit, () -> {
+		return Async.callBefore(task(), limit, () -> {
 			if(isTerminated())
 				throw new TerminatedTerminalException(this);
 			return callable.call();

@@ -29,6 +29,10 @@ public abstract class TerminalState extends State {
 		return this.terminal;
 	}
 	
+	public Task task(){
+		return this.terminal.task();
+	}
+	
 	public boolean isActive() {
 		return this.terminal.getState() == this;
 	}
@@ -48,7 +52,7 @@ public abstract class TerminalState extends State {
 	 */
 	public <R> CompletableFuture<R> callBefore(TimeLimit limit, Callable<R> callable){
 		
-		return Async.callBefore(terminal, limit, () -> {
+		return Async.callBefore(task(), limit, () -> {
 			if(!isActive())
 				throw new InactiveStateException(this);
 			if(terminal.isTerminated())

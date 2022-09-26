@@ -34,7 +34,7 @@ import io.netty.handler.logging.LoggingHandler;
 import io.netty.util.Timeout;
 import io.netty.util.concurrent.Future;
 
-public abstract class Task extends Thread implements Executor {
+public abstract class Task extends Thread implements Executor, ExecutionStage {
 
 	private static Logger logger = LogManager.getLogger(Task.class.getName());
 	
@@ -125,7 +125,7 @@ public abstract class Task extends Thread implements Executor {
 			if (jobs.size() > 0)
 				ecb.post();
 
-			while (run || ! epilogs.isEmpty()) {
+			while (isActive()) { // isActive(): run || ! epilogs.isEmpty()
 				try {
 					// wait until we get some messages
 					ecb.waitForPost(500);
@@ -314,6 +314,11 @@ public abstract class Task extends Thread implements Executor {
 	 */
 	public <R> CompletableFuture<R> callBefore(TimeLimit limit, Callable<R> callable){
 		return Async.callBefore(this, limit, callable);
+	}
+	
+	@Override
+	public boolean isActive() {
+		return (run || ! epilogs.isEmpty());
 	}
 	
 	//***************************************************************************

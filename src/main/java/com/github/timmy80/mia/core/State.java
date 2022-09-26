@@ -5,7 +5,7 @@ package com.github.timmy80.mia.core;
  * @author anthony
  *
  */
-public abstract class State {
+public abstract class State implements ExecutionStage {
 	
 	/**
 	 * Method called by the Terminal when entering this Sate.
