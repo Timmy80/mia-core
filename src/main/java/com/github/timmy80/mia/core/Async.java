@@ -187,7 +187,7 @@ public class Async {
 				t.cancel(); // cancel timer ASAP to avoid false positive timeout.
 			}
 			catch(InterruptedException e) {
-				future.completeExceptionally(new TimeLimitExceededException(false, true));
+				future.completeExceptionally(new TimeLimitExceededException(false, true, e));
 			}
 			catch(Exception e) {
 				future.completeExceptionally(e);

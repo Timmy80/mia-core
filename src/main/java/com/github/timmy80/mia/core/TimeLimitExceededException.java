@@ -16,6 +16,13 @@ public class TimeLimitExceededException extends RuntimeException {
 		this.executed = executed;
 		this.interupted = interupted;
 	}
+	
+	public TimeLimitExceededException(boolean executed, boolean interupted, Throwable cause) {
+		super(cause);
+		this.executed = executed;
+		this.interupted = interupted;
+	}
+
 
 	//TODO keep or remove this ? does not mean anything with current usage
 	public boolean isExecuted() {

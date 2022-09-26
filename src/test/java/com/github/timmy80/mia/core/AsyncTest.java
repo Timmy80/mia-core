@@ -169,7 +169,7 @@ public class AsyncTest {
 
 				@Override
 				public String call() throws Exception {
-					Thread.sleep(20);
+					Thread.sleep(3500);
 					if(!Thread.interrupted())
 						throw new IllegalStateException("Sould have been interrupted!");
 					else
