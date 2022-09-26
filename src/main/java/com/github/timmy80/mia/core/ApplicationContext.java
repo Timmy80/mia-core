@@ -57,6 +57,11 @@ public class ApplicationContext {
 	protected ApplicationContext(ApplicationContextParams params) {
 		eventLoopGroup = (params.getNetThreads() == null)?new NioEventLoopGroup():new NioEventLoopGroup(params.getNetThreads());
 		this.params = (ApplicationContextParams) params.clone();
+		ApplicationContext appCtx = this;
+		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+			appCtx.stop();
+			appCtx.join();
+		}));
 	}
 	
 	/**
@@ -88,6 +93,8 @@ public class ApplicationContext {
 	protected void removeTask(Task task) {
 		synchronized (tasks) {
 			tasks.remove(task.getName());
+			if(tasks.isEmpty() && isStopPending())
+				eventLoopGroup.shutdownGracefully();
 		}
 	}
 	
@@ -168,14 +175,18 @@ public class ApplicationContext {
 	}
 	
 	public void join() {
+		HashMap<String, Task> wTasks = null;
 		synchronized (tasks) {
-			for(Task task : tasks.values()) {
-				try {
-					task.join();
-				} catch (InterruptedException e) {
-					logger.error("Interrupted join", e);
-				}
+			wTasks = new HashMap<String, Task>(tasks);
+		}
+		
+		for(Task task : wTasks.values()) {
+			try {
+				task.join();
+			} catch (InterruptedException e) {
+				logger.error("Interrupted join", e);
 			}
 		}
+		eventLoopGroup.terminationFuture().awaitUninterruptibly();
 	}
 }
