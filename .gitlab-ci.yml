@@ -3,6 +3,7 @@ image: maven:3.8.6-openjdk-11
 variables:
   MAVEN_CLI_OPTS: "-s .m2/settings.xml --batch-mode"
   MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
+  JDK_JAVA_OPTIONS: "--add-opens java.base/java.util=ALL-UNNAMED"
 
 before_script:
   - mkdir -p .m2/
@@ -66,7 +67,7 @@ release-promote:
   dependencies:
     - "deploy-staging"
   script:
-    - mvn $MAVEN_CLI_OPTS nexus-staging:promote
+    - mvn $MAVEN_CLI_OPTS nexus-staging:release
 
 
 
