@@ -51,9 +51,8 @@ deploy-staging:
   only:
     - tags
   when: manual
-  before_script:
-    - echo "${GPG_PASSPHRASE}" | gpg --pinentry-mode loopback --import --passphrase-fd 0 ${GPG_KEY}
   script:
+    - echo "${GPG_PASSPHRASE}" | gpg --pinentry-mode loopback --import --passphrase-fd 0 ${GPG_KEY}
     - mvn $MAVEN_CLI_OPTS deploy
 
 release-promote:
