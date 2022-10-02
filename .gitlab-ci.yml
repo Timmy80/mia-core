@@ -53,7 +53,7 @@ deploy-staging:
   when: manual
   script:
     - echo "${GPG_PASSPHRASE}" | gpg --pinentry-mode loopback --import --passphrase-fd 0 ${GPG_KEY}
-    - mvn $MAVEN_CLI_OPTS deploy
+    - mvn $MAVEN_CLI_OPTS deploy -DskipTests=true
 
 release-promote:
   stage: release
