@@ -1,0 +1,73 @@
+image: maven:3.8.6-openjdk-11
+
+variables:
+  MAVEN_CLI_OPTS: "-s .m2/settings.xml --batch-mode"
+  MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
+
+before_script:
+  - mkdir -p .m2/
+  - cp ${MAVEN_SETTINGS} .m2/settings.xml
+
+cache:
+  paths:
+    - .m2/repository/
+    - target/
+
+stages:
+  - build
+  - test
+  - deploy
+  - release
+
+build:
+  stage: build
+  tags:
+    - docker
+    - amd64
+  only:
+    - main
+    - tags
+    - /^develop.*$/
+  script:
+    - mvn $MAVEN_CLI_OPTS compile
+
+test:
+  stage: test
+  tags:
+    - docker
+    - amd64
+  only:
+    - main
+    - tags
+    - /^develop.*$/
+  script:
+    - mvn $MAVEN_CLI_OPTS test
+
+deploy-staging:
+  stage: deploy
+  tags:
+    - docker
+    - amd64
+  only:
+    - tags
+  when: manual
+  before_script:
+    - echo "${GPG_PASSPHRASE}" | gpg --pinentry-mode loopback --import --passphrase-fd 0 ${GPG_KEY}
+  script:
+    - mvn $MAVEN_CLI_OPTS deploy
+
+release-promote:
+  stage: release
+  tags:
+    - docker
+    - amd64
+  only:
+    - tags
+  when: manual
+  dependencies:
+    - "deploy-staging"
+  script:
+    - mvn $MAVEN_CLI_OPTS nexus-staging:promote
+
+
+
