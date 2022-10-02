@@ -6,6 +6,32 @@
 	<artifactId>mia-core</artifactId>
 	<version>1.0.0-SNAPSHOT</version>
 
+	<name>MiA Core</name>
+	<description>Minimalistic Asynchronous. Small framework for asynchronous java application.</description>
+	<url>https://github.com/Timmy80/mia-core</url>
+
+	<licenses>
+		<license>
+			<name>MIT License</name>
+			<url>http://www.opensource.org/licenses/mit-license.php</url>
+		</license>
+	</licenses>
+
+	<developers>
+		<developer>
+			<name>Anthony THOMAS</name>
+			<email>anthony.800@live.fr</email>
+			<organization>overware-fr</organization>
+			<organizationUrl>https://github.com/overware-fr</organizationUrl>
+		</developer>
+	</developers>
+
+	<scm>
+		<connection>scm:git:git://github.com:Timmy80/mia-core.git</connection>
+		<developerConnection>scm:git:ssh://github.com:Timmy80/mia-core.git</developerConnection>
+		<url>https://github.com/Timmy80/mia-core/tree/main</url>
+	</scm>
+
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.source>11</maven.compiler.source>
@@ -61,4 +87,75 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+	
+	<build>
+		<plugins>
+			<!-- Sources and javadoc -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>3.0.1</version>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>3.1.0</version>
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<failOnError>false</failOnError><!-- temporary until fix of javadoc -->
+				</configuration>
+			</plugin>
+			<!-- PGP signature of artifacts -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-gpg-plugin</artifactId>
+				<version>1.5</version>
+				<executions>
+					<execution>
+						<id>sign-artifacts</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>sign</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.sonatype.plugins</groupId>
+				<artifactId>nexus-staging-maven-plugin</artifactId>
+				<version>1.6.7</version>
+				<extensions>true</extensions>
+				<configuration>
+					<serverId>ossrh</serverId>
+					<nexusUrl>https://oss.sonatype.org/</nexusUrl>
+					<autoReleaseAfterClose>false</autoReleaseAfterClose>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+	<distributionManagement>
+		<snapshotRepository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+		</snapshotRepository>
+		<repository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+		</repository>
+	</distributionManagement>
 </project>
