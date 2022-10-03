@@ -394,7 +394,7 @@ public abstract class Task extends Thread implements Executor, ExecutionStage {
 	}
 	
 	public Timeout newTimeout(long delay, TimeUnit unit, TimerTask task) {
-		return newTimeout(delay, unit, t -> {
+		return Async.newTimeout(this, delay, unit, t -> {
 			runLater(task::run, t);
 		});
 	}

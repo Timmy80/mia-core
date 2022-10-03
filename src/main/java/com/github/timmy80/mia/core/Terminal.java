@@ -261,7 +261,7 @@ public class Terminal<T extends Task> implements ExecutionStage {
 	}
 	
 	public Timeout newTimeout(long delay, TimeUnit unit, TimerTask task) {
-		return newTimeout(delay, unit, t -> {
+		return Async.newTimeout(task(), delay, unit, t -> {
 			runLater(task::run, t);
 		});
 	}

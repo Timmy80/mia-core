@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.timmy80</groupId>
 	<artifactId>mia-core</artifactId>
-	<version>1.0.0-alpha1</version>
+	<version>1.0.0-alpha2</version>
 
 	<name>MiA Core</name>
 	<description>Minimalistic Asynchronous. Small framework for asynchronous java application.</description>

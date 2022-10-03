@@ -134,7 +134,7 @@ public abstract class TerminalState extends State {
 	}
 	
 	public Timeout newTimeout(long delay, TimeUnit unit, TimerTask task) {
-		return newTimeout(delay, unit, t -> {
+		return Async.newTimeout(task(), delay, unit, t -> {
 			runLater(task::run, t);
 		});
 	}
