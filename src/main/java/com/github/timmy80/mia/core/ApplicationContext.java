@@ -187,6 +187,7 @@ public class ApplicationContext {
 				logger.error("Interrupted join", e);
 			}
 		}
-		eventLoopGroup.terminationFuture().awaitUninterruptibly();
+		if(eventLoopGroup.isShuttingDown())
+			eventLoopGroup.terminationFuture().awaitUninterruptibly();
 	}
 }
