@@ -30,6 +30,12 @@ public class ProbesTask extends Task {
 	private ServerSocketChannel serverChannel;
 	private CompletableFuture<Void> epilog;
 
+	/**
+	 * Constructor
+	 * @param name task name
+	 * @param appCtx parent {@link ApplicationContext}
+	 * @throws IllegalArgumentException If parameters are set incorrectly, preventing execution
+	 */
 	public ProbesTask(String name, ApplicationContext appCtx) throws IllegalArgumentException {
 		super(name, appCtx);
 	}
@@ -59,11 +65,20 @@ public class ProbesTask extends Task {
 		registerEpilog(epilog);
 	}
 	
+	/**
+	 * Event callback method for closed server channel
+	 * @param f the server socket channel future
+	 */
 	protected void eventChannelClosed(ChannelFuture f) {
 		logger.info("Probe server channel closed!");
 		epilog.complete(null);
 	}
 	
+	/**
+	 * event callback method for received request
+	 * @param channel the requesting channel
+	 * @param request the request
+	 */
 	protected void eventRequestReceived(Channel channel, FullHttpRequest request) {
 		try {
 			Class<ProbeHandlerTerm> handlerClass = getAppCtx().getProbes().get(request.uri());

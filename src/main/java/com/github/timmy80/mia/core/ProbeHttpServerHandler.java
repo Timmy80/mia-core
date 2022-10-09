@@ -15,11 +15,20 @@ import io.netty.handler.codec.http.HttpUtil;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.LastHttpContent;
 
+/**
+ * A Netty handler for the Probetask
+ * @author anthony
+ *
+ */
 public class ProbeHttpServerHandler extends SimpleChannelInboundHandler<HttpObject> {
 
 	private final ProbesTask probeTask;
 	private FullHttpRequest fullRequest = null;
 	
+	/**
+	 * Constructor
+	 * @param probeTask request handling task
+	 */
 	public ProbeHttpServerHandler(ProbesTask probeTask) {
 		this.probeTask = probeTask;
 	}

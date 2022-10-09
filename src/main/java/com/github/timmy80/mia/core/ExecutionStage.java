@@ -4,6 +4,11 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
+/**
+ * A MiA execution stage.
+ * @author anthony
+ *
+ */
 public interface ExecutionStage {
 	
 	/**

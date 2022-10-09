@@ -8,6 +8,13 @@ package com.github.timmy80.mia.core;
 public abstract class State implements ExecutionStage {
 	
 	/**
+	 * Default contructor
+	 */
+	public State() {
+		
+	}
+	
+	/**
 	 * Method called by the Terminal when entering this Sate.
 	 */
 	protected abstract void eventEntry();
@@ -19,6 +26,10 @@ public abstract class State implements ExecutionStage {
 		// nothing to be done by default
 	}
 	
+	/**
+	 * Get the name of this State
+	 * @return this.getClass().getSimpleName();
+	 */
 	public String getName() {
 		return this.getClass().getSimpleName();
 	}

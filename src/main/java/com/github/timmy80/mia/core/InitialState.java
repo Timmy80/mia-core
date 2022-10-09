@@ -10,6 +10,13 @@ import java.util.concurrent.CompletableFuture;
  */
 public class InitialState extends State {
 
+	/**
+	 * default constructor
+	 */
+	public InitialState() {
+		
+	}
+	
 	@Override
 	protected void eventEntry() {
 

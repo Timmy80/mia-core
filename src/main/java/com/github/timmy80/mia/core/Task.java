@@ -34,6 +34,11 @@ import io.netty.handler.logging.LoggingHandler;
 import io.netty.util.Timeout;
 import io.netty.util.concurrent.Future;
 
+/**
+ * A MiA task. This is intended to be the single point of synchronization.
+ * @author anthony
+ *
+ */
 public abstract class Task extends Thread implements Executor, ExecutionStage {
 
 	private static Logger logger = LogManager.getLogger(Task.class.getName());
@@ -60,9 +65,9 @@ public abstract class Task extends Thread implements Executor, ExecutionStage {
 
 	/**
 	 * Constructor to associate this task to an {@link ApplicationContext}
-	 * @param name
-	 * @param appCtx
-	 * @throws IllegalArgumentException
+	 * @param name The name of this Thread
+	 * @param appCtx The application context of this Task
+	 * @throws IllegalArgumentException If parameters are set incorrectly, preventing execution
 	 */
 	public Task(String name, ApplicationContext appCtx) throws IllegalArgumentException {
 		super(name);
@@ -74,7 +79,7 @@ public abstract class Task extends Thread implements Executor, ExecutionStage {
 	 * Default constructor.<br>
 	 * The ApplicationContext will be set to {@link ApplicationContext#getDefault()}.
 	 * @param name Unique name of this Task.
-	 * @throws IllegalArgumentException
+	 * @throws IllegalArgumentException If parameters are set incorrectly, preventing execution
 	 */
 	public Task(String name) throws IllegalArgumentException {
 		this(name, ApplicationContext.getDefault());
@@ -87,10 +92,18 @@ public abstract class Task extends Thread implements Executor, ExecutionStage {
 		ecb.post();
 	}
 	
+	/**
+	 * Internal method for a terminal to register itself to its parent task
+	 * @param terminal teminal to register
+	 */
 	protected void registerTerminal(Terminal<?> terminal) {
 		terminals.add(terminal);
 	}
 	
+	/**
+	 * Internal method for a terminal to unregister itself to its parent task
+	 * @param terminal terminal to unregister
+	 */
 	protected void unRegisterTerminal(Terminal<?> terminal) {
 		terminals.remove(terminal);
 	}
@@ -98,7 +111,7 @@ public abstract class Task extends Thread implements Executor, ExecutionStage {
 	/**
 	 * Add an epilog to this Task. An epilog will prevent this task from stopping until it's completed.<br>
 	 * An epilog can be any instance of CompletableFuture.
-	 * @param epilog
+	 * @param epilog an instance of CompletableFuture
 	 */
 	public void registerEpilog(CompletableFuture<?> epilog) {
 		epilogs.add(epilog);
@@ -109,6 +122,9 @@ public abstract class Task extends Thread implements Executor, ExecutionStage {
 		});
 	}
 	
+	/**
+	 * Require this task to stop.
+	 */
 	public void stopTask() {
 		logger.fatal("{} {}", this, new LogFmt().append("event", "STOP REQUESTED"));
 		run = false;
@@ -225,7 +241,7 @@ public abstract class Task extends Thread implements Executor, ExecutionStage {
 	/**
 	 * Get the Netty {@linkplain EventLoopGroup} used for networking within this {@link Task}.<br>
 	 * The {@link EventLoopGroup} is provided by the {@linkplain ApplicationContext}.
-	 * @return
+	 * @return Netty's EventLoopGroup
 	 */
 	public EventLoopGroup getEventloopgroup() {
 		return this.appCtx.getEventloopgroup();
@@ -234,7 +250,7 @@ public abstract class Task extends Thread implements Executor, ExecutionStage {
 	/**
 	 * Get the {@linkplain Task#lastScanTime} for this {@link Task}.<br>
 	 * See javadoc of {@linkplain Task#lastScanTime} for details.
-	 * @return
+	 * @return A timestamp in milliseconds
 	 */
 	public long getLastScanTime() {
 		return lastScanTime;
@@ -252,6 +268,14 @@ public abstract class Task extends Thread implements Executor, ExecutionStage {
 	// Netty sockets management
 	//***************************************************************************
 	
+	/**
+	 * Synchronously open a server socket (Netty)
+	 * @param inetHost host as a name or IP
+	 * @param inetPort TCP port
+	 * @param initializer Netty's ChannelInitializer
+	 * @return the created ServerSocketChannel
+	 * @throws InterruptedException if interrupted
+	 */
 	public ServerSocketChannel openServerSocket(String inetHost, int inetPort, ChannelInitializer<SocketChannel> initializer) throws InterruptedException {
 		ServerBootstrap b = new ServerBootstrap();
         b.group(getEventloopgroup())
@@ -262,6 +286,14 @@ public abstract class Task extends Thread implements Executor, ExecutionStage {
         return (ServerSocketChannel) b.bind(inetHost, inetPort).sync().channel();
 	}
 	
+	/**
+	 * Synchronously open a client socket (Netty)
+	 * @param inetHost host as a name or IP
+	 * @param inetPort TCP port
+	 * @param initializer Netty's ChannelInitializer
+	 * @return the created SocketChannel
+	 * @throws InterruptedException if interrupted
+	 */
 	public SocketChannel openClientSocket(String inetHost, int inetPort, ChannelInitializer<SocketChannel> initializer) throws InterruptedException {
 		Bootstrap b = new Bootstrap();
 		b.group(getEventloopgroup())
@@ -279,14 +311,31 @@ public abstract class Task extends Thread implements Executor, ExecutionStage {
 	// Future management
 	//***************************************************************************
 	
+	/**
+	 * Listen for future completion and call the given method.
+	 * @param <T> The future type
+	 * @param future the listened future
+	 * @param method the method called on completion
+	 */
 	public  <T> void listenFuture(Future<T> future, VoidFunction1<Future<T>> method) {
 		future.addListener((f) -> Async.runLater(this, method, future));
 	}
 	
+	/**
+	 * Listen for future completion and call the given method.
+	 * @param future the listened future
+	 * @param method the method called on completion
+	 */
 	public void listenFuture(ChannelFuture future, VoidFunction1<ChannelFuture> method) {
 		future.addListener((f) -> Async.runLater(this, method, future));
 	}
 	
+	/**
+	 * Listen for future completion and call the given method.
+	 * @param <T> The future type
+	 * @param future the listened future
+	 * @param method the method called on completion
+	 */
 	public  <T> void listenFuture(CompletableFuture<T> future, VoidFunction1<CompletableFuture<T>> method) {
 		future.handle((r, t) -> Async.runLater(this, method, future));
 	}
@@ -325,74 +374,238 @@ public abstract class Task extends Thread implements Executor, ExecutionStage {
 	// Short calls to Async static methods on this Executor.
 	//***************************************************************************
 	
+	/**
+	 * pass the given runnable to this {@link ExecutionStage}
+	 * @param runnable the {@link ThrowingRunnable}
+	 * @return A {@link CompletableFuture} for the execution
+	 */
 	public CompletableFuture<Void> runLater(ThrowingRunnable runnable){
 		return runBefore(TimeLimit.noLimit(), runnable);
 	}
 	
+	/**
+	 * pass the given function to this {@link ExecutionStage}
+	 * @param <T0> Type of the first function arg
+	 * @param function the function
+	 * @param arg0 the first function arg
+	 * @return A {@link CompletableFuture} for the execution
+	 */
 	public <T0> CompletableFuture<Void> runLater(VoidFunction1<T0> function, T0 arg0){
 		return runLater(() -> function.apply(arg0));
 	}
 	
+	/**
+	 * pass the given function to this {@link ExecutionStage}
+	 * @param <T0> Type of the first function arg
+	 * @param <T1> Type of the second function arg
+	 * @param function the function
+	 * @param arg0 the first function arg
+	 * @param arg1 the second function arg
+	 * @return A {@link CompletableFuture} for the execution
+	 */
 	public <T0, T1> CompletableFuture<Void> runLater(VoidFunction2<T0, T1> function, T0 arg0, T1 arg1){
 		return runLater(() -> function.apply(arg0, arg1));
 	}
 	
+	/**
+	 * pass the given function to this {@link ExecutionStage}
+	 * @param <T0> Type of the first function arg
+	 * @param <T1> Type of the second function arg
+	 * @param <T2> Type of the third function arg
+	 * @param function the function
+	 * @param arg0 the first function arg
+	 * @param arg1 the second function arg
+	 * @param arg2 the third function arg
+	 * @return A {@link CompletableFuture} for the execution
+	 */
 	public <T0, T1, T2> CompletableFuture<Void> runLater(VoidFunction3<T0, T1, T2> function, T0 arg0, T1 arg1, T2 arg2){
 		return runLater(() -> function.apply(arg0, arg1, arg2));
 	}
 	
+	/**
+	 * pass the given function to this {@link ExecutionStage}
+	 * @param <T0> Type of the first function arg
+	 * @param <T1> Type of the second function arg
+	 * @param <T2> Type of the third function arg
+	 * @param <T3> Type of the forth function arg
+	 * @param function the function
+	 * @param arg0 the first function arg
+	 * @param arg1 the second function arg
+	 * @param arg2 the third function arg
+	 * @param arg3 the forth function arg
+	 * @return A {@link CompletableFuture} for the execution
+	 */
 	public <T0, T1, T2, T3> CompletableFuture<Void> runLater(VoidFunction4<T0, T1, T2, T3> function, T0 arg0, T1 arg1, T2 arg2, T3 arg3){
 		return runLater(() -> function.apply(arg0, arg1, arg2, arg3));
 	}
 	
+	/**
+	 * pass the given {@link Callable} to this {@link ExecutionStage}
+	 * @param <R> Return type of the function
+	 * @param callable the {@link Callable}
+	 * @return A {@link CompletableFuture} for the execution
+	 */
 	public <R> CompletableFuture<R> callLater(Callable<R> callable){
 		return callBefore(TimeLimit.noLimit(), callable);
 	}
 	
+	/**
+	 * pass the given function to this {@link ExecutionStage}
+	 * @param <R> Return type of the function
+	 * @param <T0> Type of the first function arg
+	 * @param function the function
+	 * @param arg0 the first function arg
+	 * @return A {@link CompletableFuture} for the execution
+	 */
 	public <R, T0> CompletableFuture<R> callLater(Function1<R, T0> function, T0 arg0){
 		return callLater(() -> function.apply(arg0));
 	}
 	
+	/**
+	 * pass the given function to this {@link ExecutionStage}
+	 * @param <R> Return type of the function
+	 * @param <T0> Type of the first function arg
+	 * @param <T1> Type of the second function arg
+	 * @param function the function
+	 * @param arg0 the first function arg
+	 * @param arg1 the second function arg
+	 * @return A {@link CompletableFuture} for the execution
+	 */
 	public <R, T0, T1> CompletableFuture<R> callLater(Function2<R, T0, T1> function, T0 arg0, T1 arg1){
 		return callLater(() -> function.apply(arg0, arg1));
 	}
 	
+	/**
+	 * pass the given function to this {@link ExecutionStage}
+	 * @param <R> Return type of the function
+	 * @param <T0> Type of the first function arg
+	 * @param <T1> Type of the second function arg
+	 * @param <T2> Type of the third function arg
+	 * @param function the function
+	 * @param arg0 the first function arg
+	 * @param arg1 the second function arg
+	 * @param arg2 the third function arg
+	 * @return A {@link CompletableFuture} for the execution
+	 */
 	public <R, T0, T1, T2> CompletableFuture<R> callLater(Function3<R, T0, T1, T2> function, T0 arg0, T1 arg1, T2 arg2){
 		return callLater(() -> function.apply(arg0, arg1, arg2));
 	}
 	
+	/**
+	 * pass the given function to this {@link ExecutionStage}
+	 * @param <R> Return type of the function
+	 * @param <T0> Type of the first function arg
+	 * @param <T1> Type of the second function arg
+	 * @param <T2> Type of the third function arg
+	 * @param <T3> Type of the forth function arg
+	 * @param function the function
+	 * @param arg0 the first function arg
+	 * @param arg1 the second function arg
+	 * @param arg2 the third function arg
+	 * @param arg3 the forth function arg
+	 * @return A {@link CompletableFuture} for the execution
+	 */
 	public <R, T0, T1, T2, T3> CompletableFuture<R> callLater(Function4<R, T0, T1, T2, T3> function, T0 arg0, T1 arg1, T2 arg2, T3 arg3){
 		return callLater(() -> function.apply(arg0, arg1, arg2, arg3));
 	}
 	
+	/**
+	 * pass the given {@link Runnable} to this {@link ExecutionStage} with a {@link TimeLimit}
+	 * @param limit the {@link TimeLimit} for the execution
+	 * @param runnable the {@link Runnable}
+	 * @return A {@link CompletableFuture} for the execution
+	 */
 	public CompletableFuture<Void> executeBefore(TimeLimit limit, Runnable runnable){
 		return runBefore(limit, ()-> runnable.run());
 	}
 	
+	/**
+	 * pass the given runnable to this {@link ExecutionStage} with a {@link TimeLimit}
+	 * @param limit the {@link TimeLimit} for the execution
+	 * @param runnable the {@link ThrowingRunnable}
+	 * @return A {@link CompletableFuture} for the execution
+	 */
 	public CompletableFuture<Void> runBefore(TimeLimit limit, ThrowingRunnable runnable){
 		return callBefore(limit, ()->{ runnable.run(); return null; });
 	}
 	
+	/**
+	 * pass the given function to this {@link ExecutionStage} with a {@link TimeLimit}
+	 * @param <T0> Type of the first function arg
+	 * @param limit the {@link TimeLimit} for the execution
+	 * @param function the function
+	 * @param arg0 the first function arg
+	 * @return A {@link CompletableFuture} for the execution
+	 */
 	public <T0> CompletableFuture<Void> runBefore(TimeLimit limit, VoidFunction1<T0> function, T0 arg0){
 		return runBefore(limit, () -> function.apply(arg0));
 	}
 	
+	/**
+	 * pass the given function to this {@link ExecutionStage} with a {@link TimeLimit}
+	 * @param <T0> Type of the first function arg
+	 * @param <T1> Type of the second function arg
+	 * @param limit the {@link TimeLimit} for the execution
+	 * @param function the function
+	 * @param arg0 the first function arg
+	 * @param arg1 the second function arg
+	 * @return A {@link CompletableFuture} for the execution
+	 */
 	public <T0, T1> CompletableFuture<Void> runBefore(TimeLimit limit, VoidFunction2<T0, T1> function, T0 arg0, T1 arg1){
 		return runBefore(limit, () -> function.apply(arg0, arg1));
 	}
 	
+	/**
+	 * pass the given function to this {@link ExecutionStage} with a {@link TimeLimit}
+	 * @param <T0> Type of the first function arg
+	 * @param <T1> Type of the second function arg
+	 * @param <T2> Type of the third function arg
+	 * @param limit the {@link TimeLimit} for the execution
+	 * @param function the function
+	 * @param arg0 the first function arg
+	 * @param arg1 the second function arg
+	 * @param arg2 the third function arg
+	 * @return A {@link CompletableFuture} for the execution
+	 */
 	public <T0, T1, T2> CompletableFuture<Void> runBefore(TimeLimit limit, VoidFunction3<T0, T1, T2> function, T0 arg0, T1 arg1, T2 arg2){
 		return runBefore(limit, () -> function.apply(arg0, arg1, arg2));
 	}
 	
+	/**
+	 * pass the given function to this {@link ExecutionStage} with a {@link TimeLimit}
+	 * @param <T0> Type of the first function arg
+	 * @param <T1> Type of the second function arg
+	 * @param <T2> Type of the third function arg
+	 * @param <T3> Type of the forth function arg
+	 * @param limit the {@link TimeLimit} for the execution
+	 * @param function the function
+	 * @param arg0 the first function arg
+	 * @param arg1 the second function arg
+	 * @param arg2 the third function arg
+	 * @param arg3 the forth function arg
+	 * @return A {@link CompletableFuture} for the execution
+	 */
 	public <T0, T1, T2, T3> CompletableFuture<Void> runBefore(TimeLimit limit, VoidFunction4<T0, T1, T2, T3> function, T0 arg0, T1 arg1, T2 arg2, T3 arg3){
 		return runBefore(limit, () -> function.apply(arg0, arg1, arg2, arg3));
 	}
 	
+	/**
+	 * Create a new Timeout. If the delay is reached, the timerTask is called on this {@link ExecutionStage}.<br>
+	 * @param delayms the delay of this timer in milliseconds
+	 * @param task the function called after the delay is reached
+	 * @return a {@link Timeout} for the given args
+	 */
 	public Timeout newTimeout(long delayms, TimerTask task) {
 		return newTimeout(delayms, TimeUnit.MILLISECONDS, task); 
 	}
 	
+	/**
+	 * Create a new Timeout. If the delay is reached, the timerTask is called on this {@link ExecutionStage}.<br>
+	 * @param delay the delay of this timer
+	 * @param unit the unit of the delay
+	 * @param task the function called after the delay is reached
+	 * @return a {@link Timeout} for the given args
+	 */
 	public Timeout newTimeout(long delay, TimeUnit unit, TimerTask task) {
 		return Async.newTimeout(this, delay, unit, t -> {
 			runLater(task::run, t);

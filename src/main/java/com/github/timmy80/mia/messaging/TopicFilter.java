@@ -24,6 +24,11 @@ public class TopicFilter {
 	 */
     private final Pattern topicRegex;
 	
+    /**
+     * Constructor
+     * @param topicFilter The topic filter string
+     * @throws InvalidTopicFilterException If the String is not a valid topic filter
+     */
 	public TopicFilter(String topicFilter) throws InvalidTopicFilterException {
 		for(String token : topicFilter.split("/")) {
 			if(!TOPIC_PART_REGEX.matcher(token).matches())
@@ -34,14 +39,24 @@ public class TopicFilter {
 		this.topicRegex=Pattern.compile(topicFilter.replace(".","\\.").replace("*", "\\*").replace("+", "([^/]+)").replace("#", "(.+)") + "$");
 	}
 	
+	@Override
 	public String toString() {
 		return topicFilter;
 	}
 	
+	/**
+	 * Get the topic filter as a regex
+	 * @return a regex for this topic filter
+	 */
 	public Pattern topicRegex() {
 		return topicRegex;
 	}
 	
+	/**
+	 * Check if the given topic matches this filter
+	 * @param topic a topic string to match
+	 * @return true on match
+	 */
     public boolean matches(String topic){
         return this.topicRegex.matcher(topic).matches();
     }

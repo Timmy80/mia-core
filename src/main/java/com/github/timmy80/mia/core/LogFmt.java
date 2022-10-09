@@ -17,6 +17,19 @@ public class LogFmt {
 	StringBuilder strBuilder;
 	LinkedHashMap<String, Object> map = new LinkedHashMap<>();
 
+	/**
+	 * Default constructor
+	 */
+	public LogFmt() {
+		
+	}
+	
+	/**
+	 * Append new key/value to this log
+	 * @param key key of the entry
+	 * @param value value of the entry
+	 * @return this
+	 */
 	public LogFmt append(String key, Object value) {
 		
 		if(strBuilder != null) // already built

@@ -2,6 +2,7 @@ package com.github.timmy80.mia.core;
 
 import java.util.HashMap;
 
+
 /**
  * Parameters of an {@link ApplicationContext}
  * 
@@ -20,20 +21,47 @@ public class ApplicationContextParams implements Cloneable {
 	private String probeInetHost = "0.0.0.0"; // all by default
 
 	private int probeInetPort = 0; // disabled by default
+	
+	/**
+	 * Default constructor
+	 */
+	public ApplicationContextParams() {
+		
+	}
 
+	/**
+	 * Number of threads allocated to Netty's eventLoopGroup
+	 * @return at least 1
+	 */
 	public Integer getNetThreads() {
 		return netThreads;
 	}
 
+	/**
+	 * Set Number of threads allocated to Netty's eventLoopGroup
+	 *
+	 * @param netThreads at least 1
+	 */
 	public void setNetThreads(Integer netThreads) {
-
+		if(netThreads < 1)
+			throw new IllegalArgumentException("netThreads canoot be less than 1");
 		this.netThreads = netThreads;
 	}
 
+	/**
+	 * Specification of the probe handlers
+	 * @return A Map where key=path, path=handler class.
+	 */
 	public HashMap<String, Class<ProbeHandlerTerm>> getProbes() {
 		return probes;
 	}
 
+	/**
+	 * Add a probe to this {@link ApplicationContext}
+	 * @param <T> Type of an implementation of {@link ProbeHandlerTerm}
+	 * @param path Path of the probe
+	 * @param probeHandler A class implementing {@link ProbeHandlerTerm}
+	 */
 	@SuppressWarnings("unchecked")
 	public <T extends ProbeHandlerTerm> void addProbe(String path, Class<T> probeHandler) {
 		if (!path.startsWith("/"))
@@ -56,18 +84,34 @@ public class ApplicationContextParams implements Cloneable {
 		addProbe("/readiness", DefaultReadinessProbe.class);
 	}
 
+	/**
+	 * Get the host IP listened to for probes.
+	 * @return An IP represented as a String
+	 */
 	public String getProbeInetHost() {
 		return probeInetHost;
 	}
-
+	
+	/**
+	 * Set the host IP listened to for probes.
+	 * @param probeInetHost An IP represented as a String
+	 */
 	public void setProbeInetHost(String probeInetHost) {
 		this.probeInetHost = probeInetHost;
 	}
 
+	/**
+	 * Get the port listened to for probes
+	 * @return A TCP port number
+	 */
 	public int getProbeInetPort() {
 		return probeInetPort;
 	}
 
+	/**
+	 * Set the port listened to for probes
+	 * @param probeInetPort A TCP port number
+	 */
 	public void setProbeInetPort(int probeInetPort) {
 		this.probeInetPort = probeInetPort;
 	}

@@ -14,13 +14,33 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.util.Timeout;
 
+/**
+ * Base class for a liveness, readiness, ... probe request handling
+ * @author anthony
+ *
+ */
 public abstract class ProbeHandlerTerm extends Terminal<ProbesTask> {
 
 	private static Logger logger = LogManager.getLogger(ProbeHandlerTerm.class.getName());
+	
+	/**
+	 * The request completion future
+	 */
 	protected final CompletableFuture<HttpResponse> completionFuture;
+	/**
+	 * The requesting channel
+	 */
 	protected final Channel channel;
+	/**
+	 * The response timeout
+	 */
 	protected final Timeout timeout;
 	
+	/**
+	 * Constructor
+	 * @param task the probes task (managed by {@link ApplicationContext}
+	 * @param channel the channel with the probing peer
+	 */
 	public ProbeHandlerTerm(ProbesTask task, Channel channel) {
 		super(task);
 		this.completionFuture = new CompletableFuture<>();
@@ -29,6 +49,10 @@ public abstract class ProbeHandlerTerm extends Terminal<ProbesTask> {
 		listenFuture(this.completionFuture, this::eventResponseComplete);
 	}
 	
+	/**
+	 * Complete this probing request
+	 * @param response an instance of {@link HttpResponse}
+	 */
 	public void complete(HttpResponse response) {
 		completionFuture.complete(response);
 	}
@@ -50,6 +74,10 @@ public abstract class ProbeHandlerTerm extends Terminal<ProbesTask> {
 		}
 	}
 	
+	/**
+	 * Method implemented by sub classes to handle the probing request
+	 * @param request the probing http request
+	 */
 	public abstract void eventProbeCalled(HttpRequest request);
 	
 }

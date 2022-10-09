@@ -26,7 +26,7 @@ public class ApplicationContext {
 	
 	/**
 	 * Get or Allocate the default {@link ApplicationContext} using the default parameters.
-	 * @return
+	 * @return the default {@link ApplicationContext}
 	 */
 	public static ApplicationContext getDefault() {
 		if(defaultAppCtx == null) {
@@ -52,7 +52,7 @@ public class ApplicationContext {
 
 	/**
 	 * Create an ApplicationContext with customized parameter.
-	 * @param params
+	 * @param params This context parameters. Will be cloned, so you wont be able to change them afterwards.
 	 */
 	protected ApplicationContext(ApplicationContextParams params) {
 		eventLoopGroup = (params.getNetThreads() == null)?new NioEventLoopGroup():new NioEventLoopGroup(params.getNetThreads());
@@ -65,7 +65,7 @@ public class ApplicationContext {
 	}
 	
 	/**
-	 * Create an ApplicationContext with the default parameter.
+	 * Create an ApplicationContext with the default parameters.
 	 */
 	protected ApplicationContext() {
 		this(new ApplicationContextParams());
@@ -74,7 +74,7 @@ public class ApplicationContext {
 	/**
 	 * Register a task to this ApplicationContext.<br>
 	 * This method is called on task creation.
-	 * @param task
+	 * @param task an implementation of {@link Task}
 	 */
 	protected void addTask(Task task) {
 		synchronized (tasks) {
@@ -88,7 +88,7 @@ public class ApplicationContext {
 	/**
 	 * Remove a Task from this ApplicationContext.<br>
 	 * This method is called when a task ends.
-	 * @param task
+	 * @param task an implementation of {@link Task}
 	 */
 	protected void removeTask(Task task) {
 		synchronized (tasks) {
@@ -108,7 +108,7 @@ public class ApplicationContext {
 	
 	/**
 	 * Get the host IP listened to for probes.
-	 * @return
+	 * @return An IP represented as a String
 	 */
 	public String getProbeInetHost() {
 		return params.getProbeInetHost();
@@ -116,7 +116,7 @@ public class ApplicationContext {
 
 	/**
 	 * Get the port listened to for probes
-	 * @return
+	 * @return A TCP port number
 	 */
 	public int getProbeInetPort() {
 		return params.getProbeInetPort();
@@ -124,12 +124,16 @@ public class ApplicationContext {
 	
 	/**
 	 * Get the probe handlers.
-	 * @return
+	 * @return A Map where key=path, path=handler class.
 	 */
 	protected HashMap<String, Class<ProbeHandlerTerm>> getProbes() {
 		return params.getProbes();
 	}
 	
+	/**
+	 * Get the stop sequence status
+	 * @return True if stop sequence is pending.
+	 */
 	public boolean isStopPending() {
 		return stopPending.get();
 	}
@@ -174,6 +178,10 @@ public class ApplicationContext {
 		}
 	}
 	
+	/**
+	 * Join all the Tasks registered to this context.<br>
+	 * This method is intended to be called after {@link #stop()}
+	 */
 	public void join() {
 		HashMap<String, Task> wTasks = null;
 		synchronized (tasks) {

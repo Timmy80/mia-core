@@ -19,6 +19,8 @@ import io.prometheus.client.Counter.Child;
  * It supports Question/Response and Push messaging patterns.
  * @author anthony
  *
+ * @param <Q> The type of the <strong>Q</strong>uestion (request) message
+ * @param <R> The tupe of the <strong>R</strong>esponse message
  */
 public class Messaging<Q, R> {
 
@@ -33,6 +35,13 @@ public class Messaging<Q, R> {
 	 * Concurrent read access does not require a lock but it means that subscriptions may not be up to date.
 	 */
 	private volatile HashMap<String, List<Subscription<Q>>> subsriptions = new HashMap<>(); // Copy on write pointer (synchronize only on write)
+	
+	/**
+	 * Default constructor
+	 */
+	public Messaging() {
+		
+	}
 	
 	/**
 	 * Subscribe to a topic to receive messages.
@@ -63,6 +72,12 @@ public class Messaging<Q, R> {
 		}
 	}
 	
+	/**
+	 * Unsubscribe to a topic
+	 * @param topicFilter A topic filter like specified by the MQTT protocol. See {@link TopicFilter} for details.
+	 * @param task The subscribing task (The thread that will execute the message received event)
+	 * @param subscriber The subscriber which implements the eventPublishReceid method.
+	 */
 	public void unregister(String topicFilter, Task task, Subscriber<Q> subscriber) {
 		synchronized (subsriptions) {
 			// Copy on Write
@@ -93,7 +108,7 @@ public class Messaging<Q, R> {
 	}
 	
 	/**
-	 * 
+	 * publish a message
 	 * @param <R> The Response payload type
 	 * @param <T> The Request payload type
 	 * @param context The messaging context
@@ -132,11 +147,28 @@ public class Messaging<Q, R> {
 		return context;
 	}
 	
+	/**
+	 * Push a message to a topic
+	 * @param topic the destination topic
+	 * @param message the message
+	 * @param limit the timeout for this request
+	 * @param publisher the publishing task
+	 * @return the context for this request
+	 */
 	public MessageCtx<R> publish(String topic, Q message, TimeLimit limit, Task publisher) { // push
 		MessageCtx<R> context = new MessageCtx<R>(topic, publisher, limit);
 		return publish(context, message, publisher);
 	}
 	
+	/**
+	 * Publish a request to a topic
+	 * @param topic the destination topic
+	 * @param message the message
+	 * @param limit the timeout for this request
+	 * @param responseHandler the response handler
+	 * @param publisher the publishing task
+	 * @return the context for this request
+	 */
 	public MessageCtx<R> publish(String topic, Q message, TimeLimit limit, ResponseHandler<R> responseHandler, Task publisher){ // Q<T> -> ResponseHandler<R>
 		MessageCtx<R> context = new MessageCtx<R>(topic, publisher, limit, responseHandler);
 		return publish(context, message, publisher);

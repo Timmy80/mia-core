@@ -15,6 +15,11 @@ import io.netty.handler.codec.http.HttpVersion;
  */
 public class DefaultLivenessProbe extends ProbeHandlerTerm {
 
+	/**
+	 * Constructor
+	 * @param task the probes task (managed by {@link ApplicationContext}
+	 * @param channel the channel with the probing peer
+	 */
 	public DefaultLivenessProbe(ProbesTask task, Channel channel) {
 		super(task, channel);
 	}
