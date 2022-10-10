@@ -25,4 +25,4 @@ To make asynchronism more comprehensive, MiA provides 3 levels of `ExecutionStag
 
 This 3 stage design fits most cases you could find when implementing server-based applications.
 
-See [http2-server sample](../mia-samples/http2-server/) for an example of 3 stage design with MiA.
+See [http2-server sample](https://github.com/Timmy80/mia-samples/tree/main/http2-server) for an example of 3 stage design with MiA.
