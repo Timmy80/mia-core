@@ -30,7 +30,7 @@ build:
     - tags
     - /^develop.*$/
   script:
-    - mvn $MAVEN_CLI_OPTS compile
+    - mvn $MAVEN_CLI_OPTS clean compile
 
 test:
   stage: test
