@@ -287,6 +287,23 @@ public abstract class Task extends Thread implements Executor, ExecutionStage {
 	}
 	
 	/**
+	 * Asynchronously open a ServerSocketChannel (Netty)
+	 * @param inetHost host as a name or IP
+	 * @param inetPort TCP port
+	 * @param initializer Netty's ChannelInitializer
+	 * @return the created ServerSocketChannel
+	 */
+	public ChannelFuture asyncOpenServerSocket(String inetHost, int inetPort, ChannelInitializer<SocketChannel> initializer) {
+		ServerBootstrap b = new ServerBootstrap();
+        b.group(getEventloopgroup())
+          .channel(NioServerSocketChannel.class)
+          .handler(new LoggingHandler(this.getClass().getPackage().getName()+".ServerSocket",LogLevel.INFO))
+          .childHandler(initializer);
+        
+        return b.bind(inetHost, inetPort);
+	}
+	
+	/**
 	 * Synchronously open a client socket (Netty)
 	 * @param inetHost host as a name or IP
 	 * @param inetPort TCP port
@@ -302,6 +319,23 @@ public abstract class Task extends Thread implements Executor, ExecutionStage {
 			.handler(initializer);
 		
 		return (SocketChannel) b.connect(inetHost, inetPort).sync().channel();
+	}
+	
+	/**
+	 * Asynchronously open a SocketChannel (Netty)
+	 * @param inetHost host as a name or IP
+	 * @param inetPort TCP port
+	 * @param initializer Netty's ChannelInitializer
+	 * @return the created SocketChannel
+	 */
+	public ChannelFuture asyncOpenClientSocket(String inetHost, int inetPort, ChannelInitializer<SocketChannel> initializer) {
+		Bootstrap b = new Bootstrap();
+		b.group(getEventloopgroup())
+			.channel(NioSocketChannel.class)
+	        .handler(new LoggingHandler(this.getClass().getPackage().getName()+".ClientSocket",LogLevel.DEBUG))
+			.handler(initializer);
+		
+		return b.connect(inetHost, inetPort);
 	}
 
 	//#endregion
