@@ -44,7 +44,7 @@ public class ApplicationContextParams implements Cloneable {
 	 */
 	public void setNetThreads(Integer netThreads) {
 		if(netThreads < 1)
-			throw new IllegalArgumentException("netThreads canoot be less than 1");
+			throw new IllegalArgumentException("netThreads cannot be less than 1");
 		this.netThreads = netThreads;
 	}
 

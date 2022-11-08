@@ -36,6 +36,13 @@ public class ApplicationContext {
 		return defaultAppCtx;
 	}
 	
+	/**
+	 * Allocate a new {@link ApplicationContext} using the given parameters.
+	 */
+	public static ApplicationContext getInstance(ApplicationContextParams params) {
+		return new ApplicationContext(params);
+	}
+	
 	private final ApplicationContextParams params;
 	
 	/**
