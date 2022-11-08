@@ -280,7 +280,7 @@ public abstract class Task extends Thread implements Executor, ExecutionStage {
 		ServerBootstrap b = new ServerBootstrap();
         b.group(getEventloopgroup())
           .channel(NioServerSocketChannel.class)
-          .handler(new LoggingHandler(LogLevel.INFO))
+          .handler(new LoggingHandler(this.getClass().getPackage().getName()+".ServerSocket",LogLevel.INFO))
           .childHandler(initializer);
         
         return (ServerSocketChannel) b.bind(inetHost, inetPort).sync().channel();
@@ -298,7 +298,7 @@ public abstract class Task extends Thread implements Executor, ExecutionStage {
 		Bootstrap b = new Bootstrap();
 		b.group(getEventloopgroup())
 			.channel(NioSocketChannel.class)
-			//.handler(new LoggingHandler(LogLevel.INFO))
+	        .handler(new LoggingHandler(this.getClass().getPackage().getName()+".ClientSocket",LogLevel.DEBUG))
 			.handler(initializer);
 		
 		return (SocketChannel) b.connect(inetHost, inetPort).sync().channel();
